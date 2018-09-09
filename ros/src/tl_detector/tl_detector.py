@@ -15,8 +15,9 @@ import os
 
 STATE_COUNT_THRESHOLD = 3
 
-NUM_OF_SAVE_IMG = 50
-NUM_OF_SAVE_INTERVAL = 20
+ENABLE_SAVE_IMG = False 
+NUM_OF_SAVE_IMG = 500
+NUM_OF_SAVE_INTERVAL = 10
 SAVE_SIM_IMG_PATH = '/Sim_Img/'
 FILE_NAME = 'image'
 
@@ -58,6 +59,7 @@ class TLDetector(object):
         self.last_wp = -1
         self.state_count = 0
 
+        # Use for Save IMG
         self.save_cnt = 0
         self.savered_cnt = 0
         self.saveyellow_cnt = 0
@@ -142,33 +144,33 @@ class TLDetector(object):
             return False
        
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-
+        if ENABLE_SAVE_IMG:
         # Save the image for traffic light classifier
-        if (self.save_interval == NUM_OF_SAVE_INTERVAL-1) and (self.save_cnt < NUM_OF_SAVE_IMG):
-            path = os.path.abspath(os.path.dirname(__file__))
-            IMG_PATH = path + SAVE_SIM_IMG_PATH
-            if light.state == TrafficLight.RED:
-                IMG_PATH = IMG_PATH + 'RED/' + FILE_NAME + str(self.savered_cnt) + '.jpg'
-                self.savered_cnt += 1
-            elif light.state == TrafficLight.YELLOW:
-                IMG_PATH = IMG_PATH + 'YELLOW/' + FILE_NAME + str(self.saveyellow_cnt) + '.jpg'
-                self.saveyellow_cnt += 1
-            elif light.state == TrafficLight.GREEN:
-                IMG_PATH = IMG_PATH + 'GREEN/' + FILE_NAME + str(self.savegreen_cnt) + '.jpg'
-                self.savegreen_cnt += 1
-            else:
-                IMG_PATH = IMG_PATH + 'NONE/' + FILE_NAME + str(self.savenone_cnt) + '.jpg'
-                self.savenone_cnt == 1
-            rospy.loginfo('Save Img for classifier %s', IMG_PATH)
-            cv2.imwrite(IMG_PATH, cv_image)
-            self.save_cnt += 1
+            if (self.save_interval == NUM_OF_SAVE_INTERVAL-1) and (self.save_cnt < NUM_OF_SAVE_IMG):
+                path = os.path.abspath(os.path.dirname(__file__))
+                IMG_PATH = path + SAVE_SIM_IMG_PATH
+                if light.state == TrafficLight.RED:
+                    IMG_PATH = IMG_PATH + 'RED/' + FILE_NAME + str(self.savered_cnt) + '.jpg'
+                    self.savered_cnt += 1
+                elif light.state == TrafficLight.YELLOW:
+                    IMG_PATH = IMG_PATH + 'YELLOW/' + FILE_NAME + str(self.saveyellow_cnt) + '.jpg'
+                    self.saveyellow_cnt += 1
+                elif light.state == TrafficLight.GREEN:
+                    IMG_PATH = IMG_PATH + 'GREEN/' + FILE_NAME + str(self.savegreen_cnt) + '.jpg'
+                    self.savegreen_cnt += 1
+                else:
+                    IMG_PATH = IMG_PATH + 'NONE/' + FILE_NAME + str(self.savenone_cnt) + '.jpg'
+                    self.savenone_cnt == 1
+                rospy.loginfo('Save Img for classifier %s', IMG_PATH)
+                cv2.imwrite(IMG_PATH, cv_image)
+                self.save_cnt += 1
 
-        self.save_interval = (self.save_interval+1) % NUM_OF_SAVE_INTERVAL
-        #rospy.loginfo('self.save_interval: %d', self.save_interval)
-
+            self.save_interval = (self.save_interval+1) % NUM_OF_SAVE_INTERVAL
+            #rospy.loginfo('self.save_interval: %d', self.save_interval)
+            return light.state
+        
         #Get classification
-        #return self.light_classifier.get_classification(cv_image)
-        return light.state
+        return self.light_classifier.get_classification(cv_image)
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
