@@ -16,9 +16,10 @@ import os
 STATE_COUNT_THRESHOLD = 3
 
 ENABLE_SAVE_IMG = False 
-NUM_OF_SAVE_IMG = 500
-NUM_OF_SAVE_INTERVAL = 10
+NUM_OF_SAVE_IMG = 5000
+NUM_OF_SAVE_INTERVAL = 1
 SAVE_SIM_IMG_PATH = '/Sim_Img/'
+SAVE_SITE_IMG_PATH = '/Site_Img/'
 FILE_NAME = 'image'
 
 class TLDetector(object):
@@ -148,7 +149,12 @@ class TLDetector(object):
         # Save the image for traffic light classifier
             if (self.save_interval == NUM_OF_SAVE_INTERVAL-1) and (self.save_cnt < NUM_OF_SAVE_IMG):
                 path = os.path.abspath(os.path.dirname(__file__))
-                IMG_PATH = path + SAVE_SIM_IMG_PATH
+                is_site = self.config["is_site"]
+                if is_site:
+                    IMG_PATH = path + SAVE_SITE_IMG_PATH
+                else:
+                    IMG_PATH = path + SAVE_SIM_IMG_PATH
+
                 if light.state == TrafficLight.RED:
                     IMG_PATH = IMG_PATH + 'RED/' + FILE_NAME + str(self.savered_cnt) + '.jpg'
                     self.savered_cnt += 1
@@ -160,7 +166,7 @@ class TLDetector(object):
                     self.savegreen_cnt += 1
                 else:
                     IMG_PATH = IMG_PATH + 'NONE/' + FILE_NAME + str(self.savenone_cnt) + '.jpg'
-                    self.savenone_cnt == 1
+                    self.savenone_cnt += 1
                 rospy.loginfo('Save Img for classifier %s', IMG_PATH)
                 cv2.imwrite(IMG_PATH, cv_image)
                 self.save_cnt += 1
