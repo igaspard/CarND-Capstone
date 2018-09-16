@@ -176,7 +176,11 @@ class TLDetector(object):
             return light.state
         
         #Get classification
-        return self.light_classifier.get_classification(cv_image)
+        is_site = self.config["is_site"]
+        if is_site:
+            return self.light_classifier.get_classification_site(cv_image)
+        else:
+            return self.light_classifier.get_classification_sim(cv_image)
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
