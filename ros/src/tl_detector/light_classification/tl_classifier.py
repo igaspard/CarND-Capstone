@@ -5,7 +5,7 @@ import rospy
 
 import os
 import tensorflow as tf
-
+import urllib
 from keras.models import load_model
 from sklearn.preprocessing import LabelBinarizer
 # What model to load.
@@ -17,7 +17,7 @@ PATH_TO_FROZEN_GRAPH = PWD + '/' + MODEL_NAME + '/frozen_inference_graph.pb'
 
 PATH_TO_CLASSIFER_MODEL = PWD + '/model.h5'
 
-NUM_CLASSES = 1
+AWSLINK_TO_CLASSIFIER_MODEL = 'https://s3-us-west-1.amazonaws.com/carndmodel/model.h5'
 
 ENABLE_SAVE_IMG = False 
 SAVE_TL_IMG_PATH = '/TrafficLight/'
@@ -47,6 +47,10 @@ class TLClassifier(object):
                 od_graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(od_graph_def, name='')
 
+        if not os.path.exists(PATH_TO_CLASSIFER_MODEL):
+            rospy.loginfo('Need to download the model first time due to the size limit')
+            urllib.urlretrieve(AWSLINK_TO_CLASSIFIER_MODEL, PATH_TO_CLASSIFER_MODEL)
+            rospy.loginfo('model downloaded')
         # Load the classifer model
         self.classifier = load_model(PATH_TO_CLASSIFER_MODEL)
         rospy.loginfo('Traffic Light Classifier model loaded')
