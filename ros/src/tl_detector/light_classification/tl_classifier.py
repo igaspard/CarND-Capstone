@@ -6,6 +6,8 @@ import rospy
 import os
 import tensorflow as tf
 
+from keras.models import load_model
+from sklearn.preprocessing import LabelBinarizer
 # What model to load.
 MODEL_NAME = 'traffic_light_detection_inference'
 
@@ -13,8 +15,7 @@ PWD = os.path.abspath(os.path.dirname(__file__))
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
 PATH_TO_FROZEN_GRAPH = PWD + '/' + MODEL_NAME + '/frozen_inference_graph.pb'
 
-# List of the strings that is used to add correct label for each box.
-PATH_TO_LABELS = os.path.join('data', 'traffic_light_detection.pbtxt')
+PATH_TO_CLASSIFER_MODEL = PWD + '/model.h5'
 
 NUM_CLASSES = 1
 
@@ -45,6 +46,13 @@ class TLClassifier(object):
                 serialized_graph = fid.read()
                 od_graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(od_graph_def, name='')
+
+        # Load the classifer model
+        self.classifier = load_model(PATH_TO_CLASSIFER_MODEL)
+        rospy.loginfo('Traffic Light Classifier model loaded')
+        #self.classifier.summary()
+        self.classifier._make_predict_function()
+        self.classifier_graph = tf.get_default_graph()
 
     def run_inference_for_single_image(self, image, graph):
         with graph.as_default():
@@ -109,8 +117,30 @@ class TLClassifier(object):
                 #rospy.loginfo('Save traffic light roi %s', IMG_PATH)
                 cv2.imwrite(IMG_PATH, roi)
                 self.save_cnt += 1
+            
+            # send roi to traffic light classifier
+            # resize to 120x256 as the image size we training
+            roi_resize = cv2.resize(roi, (120, 256), interpolation=cv2.INTER_CUBIC)
+            roi_resize = np.asarray(roi_resize) / 255
+            roi_test = np.array([roi_resize],)
+            with self.classifier_graph.as_default():
+                pred = self.classifier.predict(roi_test)
+                pred = np.round(pred)
 
-        return TrafficLight.UNKNOWN
+                if pred[0][0] == 1.:
+                    rospy.loginfo("Predict Red Light")
+                    return TrafficLight.RED
+                elif pred[0][1] == 1.:
+                    rospy.loginfo("Predict Yellow Light")
+                    return TrafficLight.YELLOW
+                elif pred[0][2] == 1.:
+                    rospy.loginfo("Predict Green Light")
+                    return TrafficLight.GREEN
+                else:
+                    return TrafficLight.UNKNOWN
+            return TrafficLight.UNKNOWN
+        else:
+            return TrafficLight.UNKNOWN
 
     def get_classification_sim(self, image):
         """Determines the color of the traffic light in the image
