@@ -26,7 +26,7 @@ By using the Tensorflow object detection API, first I save the real cases image 
 
 After I can successfully detect the traffic light location, following the similar process that manually saves the traffic light picture and labels with Red, green and yellow light for image classifier which implemented by Keras. Here I meet the similar issue again that Keras version is old in ROS environment. Better this time, the training time is much less than the object detection, so I create another conda environment match all the python, Tensorflow and Keras version to train the model. Finally, it can work and detect the traffic light successfully. Below was the CNN architecture i used in this projects.
 
-The detail how these two object detection and the image classifier will summarize in other git repo later on.
+The detail how these two object detection and the image classifier will summarize in [other git repo](https://github.com/igaspard/Traffic-Light-Classifier) later on.
 
 ```
 Layer (type)                 Output Shape              Param #   
