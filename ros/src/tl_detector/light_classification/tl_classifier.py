@@ -120,7 +120,7 @@ class TLClassifier(object):
             
             # send roi to traffic light classifier
             # resize to 120x256 as the image size we training
-            roi_resize = cv2.resize(roi, (120, 256), interpolation=cv2.INTER_CUBIC)
+            roi_resize = cv2.resize(roi, (100, 200), interpolation=cv2.INTER_CUBIC)
             roi_resize = np.asarray(roi_resize) / 255
             roi_test = np.array([roi_resize],)
             with self.classifier_graph.as_default():
